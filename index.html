@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BiMath: Classical + PQC — RSA Web Crypto &amp; ML-KEM-768 (FIPS 203)</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<script>
+window.MathJax = { tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['\\[','\\]'],['$$','$$']], processEscapes: true, packages: { '[+]': ['ams'] } }, svg: { fontCache: 'global' } };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
+body{background:linear-gradient(135deg,#1a2a6c,#2a3a8c);color:#333;line-height:1.6;padding:20px;min-height:100vh}
+.container{max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:25px}
+header{text-align:center;color:white;padding:20px;border-radius:15px;background:rgba(0,0,0,0.3);box-shadow:0 8px 32px rgba(0,0,0,0.2);backdrop-filter:blur(10px)}
+h1{font-size:1.95rem;margin-bottom:10px;background:linear-gradient(to right,#ff7e5f,#feb47b);-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1.25}
+.subtitle{font-size:1rem;color:#d0d0ff;max-width:900px;margin:0 auto}
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;margin-left:6px}
+.secure-badge{background:#d4edda;color:#155724}
+.pqc-badge{background:#cfe2ff;color:#084298}
+.warn-badge{background:#fff3cd;color:#856404}
+.content-wrapper{display:flex;flex-wrap:wrap;gap:25px}
+.widget-section,.manual-section{flex:1;min-width:340px;background:white;border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,0.2);overflow:hidden;display:flex;flex-direction:column}
+.section-header{background:linear-gradient(to right,#3a4aba,#5a6ada);color:white;padding:18px 25px;font-size:1.35rem;display:flex;align-items:center;gap:10px}
+.section-content{padding:25px;flex:1}
+.input-group{margin-bottom:18px}
+label{display:block;margin-bottom:8px;font-weight:600;color:#3a4aba}
+input,textarea,select{width:100%;padding:12px 15px;border:2px solid #ddd;border-radius:8px;font-size:1rem;transition:border-color 0.3s}
+input:focus,textarea:focus,select:focus{outline:none;border-color:#5a6ada}
+textarea{min-height:90px;resize:vertical}
+.btn{display:inline-block;padding:12px 22px;background:linear-gradient(to right,#3a4aba,#5a6ada);color:white;border:none;border-radius:8px;font-size:0.95rem;font-weight:600;cursor:pointer;transition:all 0.3s;text-align:center}
+.btn:hover:not(:disabled){transform:translateY(-3px);box-shadow:0 5px 15px rgba(58,74,186,0.4)}
+.btn:disabled{opacity:0.5;cursor:not-allowed}
+.btn-secondary{background:linear-gradient(to right,#6c757d,#868e96)}
+.btn-group{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
+.key-display{background:#f8f9fa;border-left:4px solid #3a4aba;padding:15px;margin:15px 0;border-radius:0 8px 8px 0;word-break:break-all;font-family:monospace;font-size:0.85rem;max-height:180px;overflow-y:auto;white-space:pre-wrap}
+.key-label{font-weight:bold;color:#3a4aba;margin-bottom:5px}
+.result-display{background:#f0f8ff;border:1px dashed #3a4aba;padding:15px;margin:15px 0;border-radius:8px;word-break:break-all;font-family:monospace;font-size:0.85rem;max-height:180px;overflow-y:auto;white-space:pre-wrap}
+.status-message{padding:12px;border-radius:8px;margin:15px 0;display:none}
+.success{background-color:#d4edda;color:#155724;border:1px solid #c3e6cb;display:block}
+.error{background-color:#f8d7da;color:#721c24;border:1px solid #f5c6cb;display:block}
+.info{background-color:#d1ecf1;color:#0c5460;border:1px solid #bee5eb;display:block}
+.warn{background-color:#fff3cd;color:#856404;border:1px solid #ffeaa7;display:block}
+.manual-content{display:flex;flex-direction:column;height:100%;padding:0}
+.manual-header-sticky{padding:20px 25px 0 25px;background:white;border-bottom:2px solid #eef2f7}
+.manual-header-sticky hr{margin:18px 0 0 0;border:0;border-top:2px dashed #e0e4ef}
+.manual-scrollable{flex:1 1 auto;overflow-y:auto;padding:0 25px 25px 25px;max-height:560px;scroll-behavior:smooth}
+.manual-scrollable h3{color:#3a4aba;margin:20px 0 10px;padding-bottom:8px;border-bottom:2px solid #eaeaea}
+.math-formula{background:#f9f9ff;padding:15px;margin:15px 0;border-radius:8px;border-left:4px solid #5a6ada;overflow-x:auto}
+.btn-manual-toggle{display:inline-flex;align-items:center;gap:10px;padding:14px 28px;background:linear-gradient(135deg,#ff7e5f,#feb47b);color:#1a2a6c;border:none;border-radius:50px;font-size:1.05rem;font-weight:700;cursor:pointer;transition:all 0.3s ease;box-shadow:0 4px 15px rgba(255,126,95,0.4);margin-top:10px}
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px}
+.modal-overlay.open{display:flex}
+.modal-box{background:white;max-width:900px;width:100%;max-height:90vh;border-radius:24px;box-shadow:0 30px 80px rgba(0,0,0,0.5);overflow:hidden;display:flex;flex-direction:column}
+.modal-header{background:linear-gradient(135deg,#1a2a6c,#3a4aba);color:white;padding:20px 30px;display:flex;justify-content:space-between;align-items:center}
+.modal-header h2{font-size:1.5rem;display:flex;align-items:center;gap:12px}
+.modal-close-btn{background:rgba(255,255,255,0.15);border:none;color:white;font-size:1.6rem;width:44px;height:44px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.modal-body{padding:30px 35px;overflow-y:auto;flex:1;line-height:1.7;color:#1e2a3a}
+.modal-body h3{color:#1a2a6c;margin-top:28px;margin-bottom:12px;font-size:1.25rem;border-bottom:2px solid #eaeef5;padding-bottom:6px}
+.modal-body .highlight-box{background:#eef4ff;border-radius:12px;padding:18px 22px;margin:16px 0;border:1px solid #d0ddf5}
+.modal-body .warn-box{background:#fff3cd;border-radius:12px;padding:18px 22px;margin:16px 0;border:1px solid #ffeaa7;color:#856404}
+footer{text-align:center;color:white;padding:20px;font-size:0.9rem;opacity:0.85;margin-top:20px}
+.audit-banner{background:#fff3cd;border:2px solid #ffc107;border-radius:10px;padding:16px 20px;margin-bottom:20px;font-size:0.88rem;color:#664d03;line-height:1.7}
+.audit-banner strong{color:#664d03}
+.tier-table{width:100%;border-collapse:collapse;margin:12px 0;font-size:0.88rem}
+.tier-table th,.tier-table td{padding:8px 10px;border:1px solid #d0ddf5;text-align:left}
+.tier-table th{background:#eef2ff;color:#1a2a6c}
+.tier-table td.ok{background:#d4edda;color:#155724;font-weight:600}
+.tier-table td.warn{background:#fff3cd;color:#856404;font-weight:600}
+.tier-table td.no{background:#f8d7da;color:#721c24;font-weight:600}
+@media(max-width:768px){
+  h1{font-size:1.4rem}
+  .content-wrapper{flex-direction:column}
+  .btn-group{flex-direction:column}
+  .btn{width:100%}
+  .modal-box{max-height:95vh;border-radius:16px}
+  .modal-body{padding:20px}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1><i class="fas fa-lock"></i> BiMath: Classical + PQC
+      <span class="badge secure-badge"><i class="fas fa-shield-alt"></i> Web Crypto API</span>
+      <span class="badge pqc-badge"><i class="fas fa-atom"></i> ML-KEM-768 (FIPS 203)</span>
+    </h1>
+    <p class="subtitle">RSA-OAEP &amp; RSA-PSS via Web Crypto API · Hybrid Demonstrator (RSA + ML-KEM-768 @noble) · AES-256-GCM</p>
+  </header>
+
+  <div class="audit-banner">
+    <strong>⚠️ Status Keamanan &amp; Kepatuhan:</strong>
+    <p style="margin-top:8px;">
+      RSA-OAEP dan RSA-PSS menggunakan <strong>Web Crypto API</strong> (<code>crypto.subtle</code>).
+      RSA-3072 memberikan ~<strong>128-bit security strength</strong> terhadap serangan klasik (NIST SP 800-57).
+    </p>
+    <p style="margin-top:8px;">
+      <strong>ML-KEM-768</strong> menggunakan pustaka <strong>@noble/post-quantum</strong> yang
+      <strong>telah diuji terhadap ACVP test vectors NIST</strong> dan sesuai FIPS 203.
+      Namun, ini <strong>bukan</strong> modul tervalidasi FIPS 140-3.
+    </p>
+    <p style="margin-top:8px;">
+      Klaim "constant-time" dan "zeroization deterministik" <strong>tidak dijamin</strong> hanya dari penggunaan API.
+      Untuk produksi, gunakan HSM dan protokol hybrid yang telah distandardisasi (mis. X25519MLKEM768 di TLS 1.3).
+    </p>
+  </div>
+
+  <div class="content-wrapper">
+    <section class="widget-section">
+      <div class="section-header"><i class="fas fa-cogs"></i> Widget Kriptografi</div>
+      <div class="section-content">
+        <div id="statusMessage" class="status-message"></div>
+
+        <div class="input-group">
+          <label for="cryptoMode"><i class="fas fa-layer-group"></i> Mode Kriptografi:</label>
+          <select id="cryptoMode">
+            <option value="rsa" selected>RSA-OAEP — Enkripsi (Web Crypto)</option>
+            <option value="sign">RSA-PSS — Tanda Tangan Digital (Web Crypto)</option>
+            <option value="hybrid">Hybrid Demonstrator: RSA-OAEP + ML-KEM-768 (FIPS 203) + AES-256-GCM</option>
+          </select>
+        </div>
+
+        <div class="input-group">
+          <label for="plaintext"><i class="fas fa-font"></i> Pesan:</label>
+          <textarea id="plaintext">Coba tebak apa artinya : 比馬斯：你好，這是一封秘密訊息！</textarea>
+        </div>
+
+        <div class="input-group">
+          <label for="keySize"><i class="fas fa-key"></i> Ukuran Kunci RSA:</label>
+          <select id="keySize">
+            <option value="3072" selected>3072-bit — 128-bit security klasik</option>
+            <option value="4096">4096-bit — ~152-bit security klasik</option>
+          </select>
+          <p style="font-size:0.8rem;color:#856404;margin-top:6px;">
+            <i class="fas fa-info-circle"></i>
+            Baik 3072 maupun 4096 bit <strong>sama-sama rentan</strong> terhadap algoritma Shor.
+            Ukuran kunci hanya melindungi terhadap serangan klasik.
+          </p>
+        </div>
+
+        <div class="btn-group">
+          <button id="generateKeysBtn" class="btn"><i class="fas fa-key"></i> Bangkitkan Kunci</button>
+          <button id="encryptBtn" class="btn"><i class="fas fa-lock"></i> Enkripsi / Tanda Tangan</button>
+          <button id="decryptBtn" class="btn"><i class="fas fa-unlock"></i> Dekripsi / Verifikasi</button>
+          <button id="resetBtn" class="btn btn-secondary"><i class="fas fa-redo"></i> Reset</button>
+        </div>
+
+        <div id="keyDisplay" style="display:none;">
+          <h3 style="color:#3a4aba;margin:18px 0 10px;"><i class="fas fa-key"></i> Kunci</h3>
+          <div class="key-display"><div class="key-label">Kunci Publik:</div><div id="publicKey"></div></div>
+          <div class="key-display"><div class="key-label">Kunci Privat:</div><div id="privateKey"></div></div>
+        </div>
+
+        <div id="cipherDisplay" style="display:none;">
+          <h3 style="color:#3a4aba;margin:18px 0 10px;"><i class="fas fa-shield-alt"></i> Output Kriptografi</h3>
+          <div class="result-display"><div class="key-label">Ciphertext / Tanda Tangan:</div><div id="ciphertext"></div></div>
+        </div>
+
+        <div id="pqcDisplay" style="display:none;">
+          <h3 style="color:#3a4aba;margin:18px 0 10px;"><i class="fas fa-atom"></i> Detail PQC <span style="font-size:0.75rem;color:#155724;">(FIPS 203 via @noble)</span></h3>
+          <div class="result-display">
+            <div class="key-label">ML-KEM-768 Ciphertext (1088 byte):</div>
+            <div id="pqcCt"></div>
+          </div>
+          <div class="result-display">
+            <div class="key-label">AES-GCM IV + Ciphertext:</div>
+            <div id="aesCt"></div>
+          </div>
+        </div>
+
+        <div id="decryptedDisplay" style="display:none;">
+          <h3 style="color:#3a4aba;margin:18px 0 10px;"><i class="fas fa-check-circle"></i> Hasil</h3>
+          <div class="result-display"><div id="decryptedText"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="manual-section">
+      <div class="section-header"><i class="fas fa-book"></i> Manual &amp; Penjelasan</div>
+      <div class="section-content manual-content">
+        <div class="manual-header-sticky">
+          <div style="text-align:center;">
+            <button id="openManualModalBtn" class="btn-manual-toggle"><i class="fas fa-expand-alt"></i> Baca Penjelasan Lengkap</button>
+          </div>
+          <hr />
+        </div>
+        <div class="manual-scrollable">
+          <h3>Status Kepatuhan &amp; Batasan</h3>
+          <table class="tier-table">
+            <tr><th>Aspek</th><th>Status</th></tr>
+            <tr><td>RSA-OAEP (SHA-256)</td><td class="ok">✅ Web Crypto API</td></tr>
+            <tr><td>RSA-PSS (SHA-256)</td><td class="ok">✅ Web Crypto API</td></tr>
+            <tr><td>Ukuran kunci default 3072-bit</td><td class="ok">✅ Sesuai NIST SP 800-57 (klasik)</td></tr>
+            <tr><td>CSPRNG (<code>crypto.getRandomValues</code>)</td><td class="ok">✅ Sumber keacakan OS</td></tr>
+            <tr><td>AES-256-GCM</td><td class="ok">✅ Web Crypto API</td></tr>
+            <tr><td>Kunci privat non-extractable</td><td class="ok">✅ Diterapkan</td></tr>
+            <tr><td>ML-KEM-768 (@noble/post-quantum)</td><td class="ok">✅ Teruji ACVP, sesuai FIPS 203</td></tr>
+            <tr><td>Jaminan constant-time</td><td class="warn">⚠️ Bergantung implementasi runtime</td></tr>
+            <tr><td>Zeroization deterministik</td><td class="no">❌ Tidak dijamin di JavaScript</td></tr>
+            <tr><td>Fault-injection resistance</td><td class="no">❌ Tidak dijamin</td></tr>
+            <tr><td>Sertifikasi FIPS 140-3</td><td class="no">❌ Tidak diklaim</td></tr>
+          </table>
+
+          <div class="math-formula">
+            <p><strong>RSA-OAEP:</strong> $c = \text{OAEP-SHA256}(m)^e \bmod n$</p>
+            <p><strong>RSA-PSS:</strong> $s = \text{PSS-encode}(H(m))^d \bmod n$</p>
+            <p><strong>Hybrid Demonstrator:</strong> $K_f = \text{SHA-256}(K_{\text{RSA}} \parallel K_{\text{ML-KEM}} \parallel c_{\text{RSA}} \parallel c_{\text{PQC}} \parallel \text{IV} \parallel \text{context})$</p>
+          </div>
+
+          <div style="background:#cfe2ff;border-left:4px solid #0d6efd;border-radius:8px;padding:16px 20px;margin-top:18px;color:#084298;">
+            <h4 style="margin-bottom:8px;"><i class="fas fa-info-circle"></i> Enkripsi ≠ Integritas ≠ Autentikasi Identitas</h4>
+            <ul style="margin-left:20px;">
+              <li><strong>RSA-OAEP / AES-GCM</strong> → <em>kerahasiaan</em></li>
+              <li><strong>AES-GCM tag</strong> → <em>integritas ciphertext terhadap kunci</em></li>
+              <li><strong>RSA-PSS</strong> → <em>autentikasi identitas pemilik kunci privat</em></li>
+              <li><strong>ML-KEM</strong> → <em>key encapsulation</em>, bukan tanda tangan</li>
+            </ul>
+          </div>
+
+          <div style="background:#f0f8ff;border-left:4px solid #3a4aba;border-radius:8px;padding:16px 20px;margin-top:16px;">
+            <h4 style="margin-bottom:8px;color:#1a2a6c;"><i class="fas fa-flask"></i> Hybrid Demonstrator — Bukan Hybrid Standard</h4>
+            <p style="font-size:0.9rem;color:#333;">
+              Konstruksi hybrid pada halaman ini adalah <strong>demonstrasi edukatif</strong>.
+              Ini <strong>bukan pengganti protokol hybrid yang telah distandardisasi</strong>
+              (seperti X25519MLKEM768 dalam TLS 1.3). Keamanan formal bergantung pada
+              konstruksi KDF/combiner, binding konteks, dan protokol keseluruhan.
+            </p>
+          </div>
+
+          <div style="background:#fff3cd;border-left:4px solid #ffc107;border-radius:8px;padding:16px 20px;margin-top:16px;color:#664d03;">
+            <h4 style="margin-bottom:8px;"><i class="fas fa-exclamation-triangle"></i> Catatan tentang MITM</h4>
+            <p style="font-size:0.9rem;">
+              Hybrid demonstrator ini <strong>tidak menyediakan autentikasi identitas pengirim</strong>.
+              Dalam protokol nyata, public key harus diverifikasi melalui sertifikat atau PKI
+              untuk mencegah serangan man-in-the-middle.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <footer><p>BiMath Kriptografi Klasik + PQC © 2027 | Web Crypto API + @noble/post-quantum (FIPS 203)</p></footer>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!--  MODAL                                                    -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div id="manualModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2><i class="fas fa-book-open"></i> Penjelasan Lengkap</h2>
+      <button id="closeManualModalBtn" class="modal-close-btn"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="modalBodyContent">
+
+  <h3>1. Aritmetika Modular Bahasa Asli RSA</h3>
+  <p>
+    RSA bekerja sepenuhnya di dalam <strong>aritmetika modular</strong>. Alih-alih bekerja dengan bilangan
+    bulat biasa, kita bekerja dengan <em>sisa pembagian</em> oleh suatu modulus $n$.
+  </p>
+  <div class="math-formula">
+    <p>$$a \equiv b \pmod{n} \iff n \mid (a - b)$$</p>
+    <p>Contoh: $27 \equiv 6 \pmod{7}$ karena $27 - 6 = 21$ habis dibagi 7.</p>
+  </div>
+  <p>
+    Operasi penjumlahan, pengurangan, dan perkalian di aritmetika modular bersifat <em>tertutup</em>:
+    hasilnya selalu bisa direduksi kembali ke rentang $0 \le r < n$. Sifat inilah yang membuat RSA dapat
+    dihitung efisien meskipun $n$ memiliki ratusan digit.
+  </p>
+
+  <h3>2. Fungsi Totient Euler &amp; Invers Modular</h3>
+  <p>
+    <strong>Fungsi totient Euler</strong> $\varphi(n)$ menghitung banyaknya bilangan $1 \le k \le n$
+    yang koprima dengan $n$. Untuk $n = pq$ dengan $p, q$ prima berbeda:
+  </p>
+  <div class="math-formula">
+    <p>$$\varphi(n) = (p-1)(q-1)$$</p>
+  </div>
+  <p><strong>Invers modular</strong> adalah bilangan $d$ yang memenuhi:</p>
+  <div class="math-formula">
+    <p>$$e \cdot d \equiv 1 \pmod{\varphi(n)}$$</p>
+  </div>
+  <p>
+    Invers modular <strong>ada jika dan hanya jika</strong> $\gcd(e, \varphi(n)) = 1$. Untuk mencari $d$
+    secara efisien, digunakan <em>Extended Euclidean Algorithm</em>.
+  </p>
+
+  <h3>3. Pembangkitan Kunci RSA</h3>
+  <div class="math-formula">
+    <p><strong>Langkah 1.</strong> Pilih dua prima besar berbeda: $p, q$</p>
+    <p><strong>Langkah 2.</strong> Hitung modulus: $n = pq$</p>
+    <p><strong>Langkah 3.</strong> Hitung totient: $\varphi(n) = (p-1)(q-1)$</p>
+    <p><strong>Langkah 4.</strong> Pilih $e$ dengan $1 < e < \varphi(n)$ dan $\gcd(e, \varphi(n)) = 1$</p>
+    <p><strong>Langkah 5.</strong> Hitung $d = e^{-1} \bmod \varphi(n)$</p>
+  </div>
+  <div class="highlight-box">
+    <p><strong>Kunci publik:</strong> $(n, e)$  boleh diumumkan</p>
+    <p><strong>Kunci privat:</strong> $(n, d)$  harus dirahasiakan</p>
+    <p><strong>Rahasia wajib:</strong> $p, q, \varphi(n)$</p>
+  </div>
+
+  <h3>4. Enkripsi &amp; Dekripsi  Mengapa Bekerja</h3>
+  <div class="math-formula">
+    <p><strong>Enkripsi:</strong> $c \equiv m^e \pmod{n}$</p>
+    <p><strong>Dekripsi:</strong> $m \equiv c^d \pmod{n}$</p>
+  </div>
+  <p>
+    Karena $ed \equiv 1 \pmod{\varphi(n)}$, terdapat bilangan bulat $k$ sehingga $ed = 1 + k\varphi(n)$.
+    Berdasarkan Teorema Euler:
+  </p>
+  <div class="math-formula">
+    <p>$$m^{\varphi(n)} \equiv 1 \pmod{n}$$</p>
+    <p>$$c^d \equiv m^{ed} = m^{1 + k\varphi(n)} = m \cdot (m^{\varphi(n)})^k \equiv m \pmod{n}$$</p>
+  </div>
+
+  <h3>5. Keamanan RSA Faktorisasi &amp; Batasnya</h3>
+  <div class="math-formula">
+    <p>$$n \xrightarrow{\text{faktorkan}} p, q \xrightarrow{} \varphi(n) \xrightarrow{} d = e^{-1} \bmod \varphi(n)$$</p>
+  </div>
+  <p>Dua catatan penting:</p>
+  <ul>
+    <li><strong>Kesulitan faktorisasi ≠ jaminan keamanan sistem.</strong> Serangan dapat menyasar implementasi.</li>
+    <li><strong>Algoritma Shor memfaktorkan $n$ dalam waktu polinomial</strong> pada komputer kuantum. RSA tidak post-quantum.</li>
+  </ul>
+
+  <h3>6. Padding OAEP Menutup Celah Determinisme</h3>
+  <p>
+    RSA tanpa padding bersifat <strong>deterministik</strong>: $(m^e \bmod n)$ selalu sama untuk $m$ yang
+    sama. OAEP menyuntikkan keacakan:
+  </p>
+  <div class="math-formula">
+    <p>$$c = \text{RSA-OAEP}(m; r)^e \bmod n \quad \text{dengan } r \text{ acak}$$</p>
+  </div>
+
+  <h3>7. RSA-PSS Tanda Tangan Digital</h3>
+  <div class="math-formula">
+    <p><strong>Sign:</strong> $s = \text{PSS-encode}(H(m); r)^d \bmod n$</p>
+    <p><strong>Verify:</strong> cek apakah $\text{PSS-verify}(s^e \bmod n) = H(m)$</p>
+  </div>
+
+  <h3>8. Hybrid Encryption Mengapa RSA Sendiri Tidak Cukup</h3>
+  <p>
+    RSA terlalu lambat untuk data besar, dan terbatas pada $m < n$ (318 byte untuk RSA-3072/OAEP-SHA256).
+    Solusinya: <strong>hybrid encryption</strong>.
+  </p>
+
+  <h3>9. Dari RSA ke PQC Mengapa Lattice?</h3>
+  <p>
+    Ketika RSA dan ECC runtuh di era kuantum, kriptografi membutuhkan kelas masalah matematika baru
+    yang <strong>tidak bergantung pada faktorisasi atau logaritma diskret</strong>. Kandidat terkuat:
+    <strong>kriptografi berbasis lattice (kisi)</strong>.
+  </p>
+  <div class="highlight-box">
+    <p>
+      <strong>Masalah inti lattice:</strong> Diberikan basis dari lattice berdimensi tinggi, temukan
+      vektor terpendek. Untuk dimensi rendah ini mudah; untuk dimensi tinggi, ini <strong>NP-hard</strong>
+      bahkan untuk komputer kuantum sejauh yang diketahui saat ini.
+    </p>
+  </div>
+
+  <h3>10. Module-LWE Fondasi Matematika ML-KEM</h3>
+  <div class="math-formula">
+    <p>Diberikan matriks publik $\mathbf{A} \in \mathbb{Z}_q^{k \times k}$ dan vektor publik</p>
+    <p>$$\mathbf{t} = \mathbf{A}\mathbf{s} + \mathbf{e} \pmod{q}$$</p>
+    <p>dengan $\mathbf{s}$ rahasia dan $\mathbf{e}$ error kecil, sulit memulihkan $\mathbf{s}$.</p>
+  </div>
+  <p>
+    <strong>Module-LWE</strong> menggantikan elemen bilangan bulat dengan elemen polinomial dalam ring
+    $R_q = \mathbb{Z}_q[X]/(X^{256}+1)$.
+  </p>
+
+  <h3>11. ML-KEM-768 Proses Lengkap</h3>
+  <div class="math-formula">
+    <p><strong>KeyGen:</strong> Hasilkan $\mathbf{A}$ dari seed $\rho$, sampling $\mathbf{s}, \mathbf{e}$, hitung $\mathbf{t} = \mathbf{A}\mathbf{s} + \mathbf{e}$.</p>
+    <p><strong>Encaps:</strong> Pilih $m$ acak, hitung $c = (u, v)$ dengan $u = \mathbf{A}^T \mathbf{r} + e_1$ dan $v = \mathbf{t}^T \mathbf{r} + e_2 + \text{Encode}(m)$.</p>
+    <p><strong>Decaps:</strong> Hitung $m' = v - \mathbf{s}^T u$, pulihkan $m$ dan $K = \text{KDF}(m)$.</p>
+  </div>
+  <p><strong>Parameter ML-KEM-768:</strong></p>
+  <ul>
+    <li>Public key: <code>ek = 1184 byte</code></li>
+    <li>Private key: <code>dk = 2400 byte</code></li>
+    <li>Ciphertext: <code>ct = 1088 byte</code></li>
+    <li>Shared secret: <code>ss = 32 byte</code></li>
+    <li>Security category NIST: 3 (≈ AES-192)</li>
+  </ul>
+
+  <h3>12. Hierarki Keamanan &amp; Batasan</h3>
+  <div class="highlight-box">
+    <p>$$\boxed{\text{Algoritma Standar} \neq \text{Implementasi} \neq \text{Implementasi Tervalidasi} \neq \text{Sistem Aman}}$$</p>
+  </div>
+  <p>
+    Menggunakan <code>crypto.subtle</code> berarti memakai <em>API standar</em>. Menggunakan
+    <code>@noble/post-quantum</code> berarti memakai <em>implementasi yang teruji KAT</em>. Namun
+    keduanya tidak otomatis berarti sistem produksi yang aman.
+  </p>
+  <div class="math-formula">
+    <p>$$K_f = \text{SHA-256}(K_{\text{RSA}} \parallel K_{\text{ML-KEM}} \parallel c_{\text{RSA}} \parallel c_{\text{PQC}} \parallel \text{IV} \parallel \text{context})$$</p>
+    <p>$$C = \text{AES-256-GCM}_{K_f}(M)$$</p>
+  </div>
+
+  <h3>13. Kesimpulan</h3>
+  <div class="highlight-box">
+    <p>$$\boxed{\text{Security} = \text{Algorithm} + \text{Implementation} + \text{Protocol} + \text{Key Management} + \text{Platform}}$$</p>
+  </div>
+  <ul>
+    <li><strong>Fondasi matematika:</strong> ✓ prima, totient, modular, invers</li>
+    <li><strong>RSA primitive:</strong> ✓ Web Crypto API</li>
+    <li><strong>ML-KEM:</strong> ✓ @noble/post-quantum, teruji ACVP</li>
+    <li><strong>Hybrid:</strong> ⚠️ Demonstrator edukasi</li>
+    <li><strong>Keseluruhan:</strong> ⚠️ Belum layak disebut industry-grade</li>
+  </ul>
+
+  <p style="margin-top:20px;text-align:right;color:#6a7a9a;"><i class="fas fa-graduation-cap"></i> Selamat belajar kriptografi!</p>
+</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!--  MAIN SCRIPT — RSA via Web Crypto + ML-KEM via CDN       -->
+<!--  PERBAIKAN: URL CDN dengan subpath /ml-kem + fallback    -->
+<!-- ════════════════════════════════════════════════════════ -->
+<script type="module">
+/* ═══════════════════════════════════════════════════════
+   LOAD @noble/post-quantum DARI CDN
+   Menggunakan subpath /ml-kem karena entry point utama
+   TIDAK mengekspor ml_kem768 secara langsung.
+   Beberapa CDN dicoba berurutan untuk redundansi.
+   ═══════════════════════════════════════════════════════ */
+let ml_kem768 = null;
+const CDN_CANDIDATES = [
+  'https://esm.sh/@noble/post-quantum@0.4.0/ml-kem',
+  'https://esm.sh/@noble/post-quantum/ml-kem',
+  'https://cdn.jsdelivr.net/npm/@noble/post-quantum@0.4.0/ml-kem/+esm'
+];
+
+let lastErr = null;
+for (const url of CDN_CANDIDATES) {
+  try {
+    const mod = await import(/* @vite-ignore */ url);
+    ml_kem768 = mod.ml_kem768 || mod.default?.ml_kem768 || mod.default;
+    if (ml_kem768 && typeof ml_kem768.keygen === 'function') {
+      console.log(`✅ @noble/post-quantum dimuat dari: ${url}`);
+      break;
+    }
+    ml_kem768 = null;
+  } catch (e) {
+    lastErr = e;
+    console.warn(`Gagal memuat dari ${url}:`, e.message);
+  }
+}
+
+if (!ml_kem768) {
+  console.error('Semua CDN gagal memuat @noble/post-quantum:', lastErr);
+  const banner = document.createElement('div');
+  banner.className = 'audit-banner';
+  banner.style.background = '#f8d7da';
+  banner.style.borderColor = '#f5c6cb';
+  banner.style.color = '#721c24';
+  banner.innerHTML = `<strong>❌ Gagal memuat @noble/post-quantum dari semua CDN.</strong><br>
+    Mode hybrid dinonaktifkan. Mode RSA (Web Crypto) tetap berfungsi.<br>
+    <small>Error terakhir: ${lastErr?.message || 'tidak diketahui'}. Periksa koneksi internet atau buka konsol untuk detail.</small>`;
+  document.querySelector('.container').insertBefore(banner, document.querySelector('.content-wrapper'));
+}
+
+/* ═══════════════════════════════════════════════════════
+   UTILITAS
+   ═══════════════════════════════════════════════════════ */
+const bytesToHex = b => [...b].map(x => x.toString(16).padStart(2,'0')).join('');
+
+const CONFIG = {
+  RSA_EXPONENT: new Uint8Array([0x01, 0x00, 0x01]),
+  OAEP_HASH: 'SHA-256',
+  PSS_HASH: 'SHA-256',
+  PSS_SALT: 32,
+  AES_KEY_BYTES: 32,
+  AES_IV_BYTES: 12,
+  OAEP_HASH_LEN: 32,
+  KDF_CONTEXT: new TextEncoder().encode('BiMath-Hybrid-Demo-v1')
+};
+
+const STATE = {
+  mode: 'rsa',
+  rsaKeyPair: null,
+  pqcKeyPair: null,
+  cipher: null,
+  signature: null,
+  hybridPayload: null,
+  modulusBits: 3072
+};
+
+const DOM = {
+  plaintext: document.getElementById('plaintext'),
+  keySize: document.getElementById('keySize'),
+  mode: document.getElementById('cryptoMode'),
+  genBtn: document.getElementById('generateKeysBtn'),
+  encBtn: document.getElementById('encryptBtn'),
+  decBtn: document.getElementById('decryptBtn'),
+  resetBtn: document.getElementById('resetBtn'),
+  pubDisp: document.getElementById('publicKey'),
+  privDisp: document.getElementById('privateKey'),
+  cipherDisp: document.getElementById('ciphertext'),
+  decryptedDisp: document.getElementById('decryptedText'),
+  keySec: document.getElementById('keyDisplay'),
+  cipherSec: document.getElementById('cipherDisplay'),
+  decSec: document.getElementById('decryptedDisplay'),
+  status: document.getElementById('statusMessage'),
+  modal: document.getElementById('manualModal'),
+  openModalBtn: document.getElementById('openManualModalBtn'),
+  closeModalBtn: document.getElementById('closeManualModalBtn'),
+  pqcDisplay: document.getElementById('pqcDisplay'),
+  pqcCt: document.getElementById('pqcCt'),
+  aesCt: document.getElementById('aesCt')
+};
+
+function showStatus(msg, type='info'){
+  DOM.status.textContent = msg;
+  DOM.status.className = 'status-message ' + type;
+  DOM.status.style.display = 'block';
+  if (type === 'success') setTimeout(() => DOM.status.style.display = 'none', 5000);
+}
+
+/* ── Modal ─────────────────────────────────────────────── */
+DOM.openModalBtn.addEventListener('click', () => {
+  DOM.modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  MathJax.typesetPromise?.();
+});
+DOM.closeModalBtn.addEventListener('click', () => {
+  DOM.modal.classList.remove('open');
+  document.body.style.overflow = '';
+});
+DOM.modal.addEventListener('click', e => {
+  if (e.target === DOM.modal) {
+    DOM.modal.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && DOM.modal.classList.contains('open')) {
+    DOM.modal.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+});
+
+/* ═══════════════════════════════════════════════════════
+   RSA KEYPAIR — extractable: false
+   ═══════════════════════════════════════════════════════ */
+async function generateRSAKeyPair(bits, forSign = false){
+  const usages = forSign ? ['sign','verify'] : ['encrypt','decrypt'];
+  const algo = forSign
+    ? { name: 'RSA-PSS', modulusLength: bits, publicExponent: CONFIG.RSA_EXPONENT, hash: CONFIG.PSS_HASH }
+    : { name: 'RSA-OAEP', modulusLength: bits, publicExponent: CONFIG.RSA_EXPONENT, hash: CONFIG.OAEP_HASH };
+  return await crypto.subtle.generateKey(algo, false, usages);
+}
+
+/* ═══════════════════════════════════════════════════════
+   ML-KEM-768 via @noble/post-quantum
+   ═══════════════════════════════════════════════════════ */
+function mlkemKeygen(){
+  if (!ml_kem768) throw new Error('ML-KEM tidak tersedia — modul gagal dimuat.');
+  const keys = ml_kem768.keygen();
+  return { ek: keys.publicKey, dk: keys.secretKey };
+}
+
+function mlkemEncaps(ek){
+  if (!ml_kem768) throw new Error('ML-KEM tidak tersedia — modul gagal dimuat.');
+  const { cipherText, sharedSecret } = ml_kem768.encapsulate(ek);
+  return { c: cipherText, Kss: sharedSecret };
+}
+
+function mlkemDecaps(dk, c){
+  if (!ml_kem768) throw new Error('ML-KEM tidak tersedia — modul gagal dimuat.');
+  return ml_kem768.decapsulate(c, dk);
+}
+
+/* ═══════════════════════════════════════════════════════
+   MODE CHANGE
+   ═══════════════════════════════════════════════════════ */
+DOM.mode.addEventListener('change', () => {
+  STATE.mode = DOM.mode.value;
+  if (STATE.mode === 'hybrid' && !ml_kem768){
+    showStatus('Mode hybrid tidak tersedia — modul ML-KEM gagal dimuat.', 'error');
+    DOM.mode.value = 'rsa';
+    STATE.mode = 'rsa';
+    return;
+  }
+  const label = STATE.mode === 'rsa' ? 'RSA-OAEP'
+              : STATE.mode === 'sign' ? 'RSA-PSS'
+              : 'Hybrid Demonstrator (RSA-OAEP + ML-KEM-768)';
+  showStatus(`Mode: ${label}`, 'info');
+});
+
+/* ═══════════════════════════════════════════════════════
+   GENERATE KEYS
+   ═══════════════════════════════════════════════════════ */
+DOM.genBtn.addEventListener('click', async () => {
+  DOM.genBtn.disabled = true;
+  showStatus('Membangkitkan kunci... (RSA 3072-bit bisa 10–30 detik)', 'info');
+  try {
+    const bits = parseInt(DOM.keySize.value, 10);
+    STATE.modulusBits = bits;
+    const forSign = STATE.mode === 'sign';
+
+    STATE.rsaKeyPair = await generateRSAKeyPair(bits, forSign);
+    STATE.pqcKeyPair = STATE.mode === 'hybrid' ? mlkemKeygen() : null;
+
+    const pubAlgo = forSign ? 'RSA-PSS' : 'RSA-OAEP';
+
+    DOM.pubDisp.innerHTML =
+      `[${pubAlgo}] ${bits}-bit keypair (non-extractable)<br>` +
+      `<span style="color:#6a7a9a">Public key dikelola browser sebagai objek CryptoKey. ` +
+      `Karena keypair non-extractable, byte mentah tidak dapat ditampilkan.</span>` +
+      (STATE.pqcKeyPair ? `<br><br>[ML-KEM-768] ek = ${STATE.pqcKeyPair.ek.length} byte (@noble/post-quantum, FIPS 203)` : '');
+
+    DOM.privDisp.innerHTML =
+      `[${pubAlgo}] Private key — CryptoKey non-extractable<br>` +
+      `<span style="color:#6a7a9a">Material kunci tidak dapat diekspor via Web Crypto API. ` +
+      `JavaScript tidak memberikan jaminan zeroization deterministik.</span>` +
+      (STATE.pqcKeyPair ? `<br><br>[ML-KEM-768] dk = ${STATE.pqcKeyPair.dk.length} byte (@noble/post-quantum, teruji ACVP)` : '');
+
+    DOM.keySec.style.display = 'block';
+    DOM.cipherSec.style.display = 'none';
+    DOM.decSec.style.display = 'none';
+    DOM.pqcDisplay.style.display = 'none';
+    DOM.encBtn.disabled = false;
+    DOM.decBtn.disabled = true;
+
+    showStatus(`Kunci ${bits}-bit siap (${pubAlgo}${STATE.pqcKeyPair ? ' + ML-KEM-768' : ''}).`, 'success');
+  } catch (e) {
+    showStatus('Gagal: ' + e.message, 'error');
+    console.error(e);
+  } finally {
+    DOM.genBtn.disabled = false;
+  }
+});
+
+/* ═══════════════════════════════════════════════════════
+   BATAS OAEP DINAMIS
+   ═══════════════════════════════════════════════════════ */
+function oaepMaxLen(bits){
+  const k = Math.ceil(bits / 8);
+  return k - 2 * CONFIG.OAEP_HASH_LEN - 2;
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENKRIPSI / TANDA TANGAN
+   ═══════════════════════════════════════════════════════ */
+DOM.encBtn.addEventListener('click', async () => {
+  if (!STATE.rsaKeyPair) return showStatus('Bangkitkan kunci dulu!', 'error');
+  const plaintext = DOM.plaintext.value;
+  if (!plaintext.trim()) return showStatus('Isi pesan!', 'error');
+
+  try {
+    if (STATE.mode === 'rsa'){
+      const data = new TextEncoder().encode(plaintext);
+      const maxDirect = oaepMaxLen(STATE.modulusBits);
+      if (data.length <= maxDirect) {
+        const ct = await crypto.subtle.encrypt({ name: 'RSA-OAEP' }, STATE.rsaKeyPair.publicKey, data);
+        STATE.cipher = { type: 'direct', ct: new Uint8Array(ct) };
+      } else {
+        const rawAes = crypto.getRandomValues(new Uint8Array(CONFIG.AES_KEY_BYTES));
+        const rsaWrapped = new Uint8Array(await crypto.subtle.encrypt(
+          { name: 'RSA-OAEP' }, STATE.rsaKeyPair.publicKey, rawAes
+        ));
+        const aesKey = await crypto.subtle.importKey(
+          'raw', rawAes, 'AES-GCM', false, ['encrypt']
+        );
+        const iv = crypto.getRandomValues(new Uint8Array(CONFIG.AES_IV_BYTES));
+        const ct = new Uint8Array(await crypto.subtle.encrypt(
+          { name: 'AES-GCM', iv }, aesKey, data
+        ));
+        STATE.cipher = { type: 'hybrid-internal', rsaWrapped, iv, aesCt: ct };
+      }
+      DOM.cipherDisp.textContent = STATE.cipher.type === 'direct'
+        ? bytesToHex(STATE.cipher.ct)
+        : `[RSA-wrapped AES key] ${bytesToHex(STATE.cipher.rsaWrapped).slice(0,80)}...\n` +
+          `[IV] ${bytesToHex(STATE.cipher.iv)}\n` +
+          `[AES-GCM CT] ${bytesToHex(STATE.cipher.aesCt).slice(0,80)}...`;
+      showStatus('Enkripsi RSA-OAEP berhasil.', 'success');
+
+    } else if (STATE.mode === 'sign'){
+      const data = new TextEncoder().encode(plaintext);
+      const sig = await crypto.subtle.sign(
+        { name: 'RSA-PSS', saltLength: CONFIG.PSS_SALT },
+        STATE.rsaKeyPair.privateKey,
+        data
+      );
+      STATE.signature = new Uint8Array(sig);
+      DOM.cipherDisp.textContent = bytesToHex(STATE.signature);
+      showStatus('Tanda tangan RSA-PSS berhasil dibuat.', 'success');
+
+    } else {
+      const rawAes = crypto.getRandomValues(new Uint8Array(CONFIG.AES_KEY_BYTES));
+
+      const rsaWrapped = new Uint8Array(await crypto.subtle.encrypt(
+        { name: 'RSA-OAEP' }, STATE.rsaKeyPair.publicKey, rawAes
+      ));
+      const { Kss: pqShared, c: pqCt } = mlkemEncaps(STATE.pqcKeyPair.ek);
+      const iv = crypto.getRandomValues(new Uint8Array(CONFIG.AES_IV_BYTES));
+
+      const combined = new Uint8Array(
+        CONFIG.KDF_CONTEXT.length + 64 + pqCt.length + rsaWrapped.length + iv.length
+      );
+      let off = 0;
+      combined.set(CONFIG.KDF_CONTEXT, off); off += CONFIG.KDF_CONTEXT.length;
+      combined.set(rawAes, off); off += rawAes.length;
+      combined.set(pqShared, off); off += pqShared.length;
+      combined.set(pqCt, off); off += pqCt.length;
+      combined.set(rsaWrapped, off); off += rsaWrapped.length;
+      combined.set(iv, off);
+      const finalKeyBytes = new Uint8Array(
+        await crypto.subtle.digest('SHA-256', combined)
+      );
+
+      const finalKey = await crypto.subtle.importKey(
+        'raw', finalKeyBytes, 'AES-GCM', false, ['encrypt']
+      );
+      const ct = new Uint8Array(await crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv }, finalKey, new TextEncoder().encode(plaintext)
+      ));
+
+      STATE.hybridPayload = { rsaWrapped, pqCt, iv, aesCt: ct };
+
+      DOM.cipherDisp.textContent = '[RSA-OAEP wrapped AES key] ' + bytesToHex(rsaWrapped).slice(0, 80) + '...';
+      DOM.pqcCt.textContent = bytesToHex(pqCt).slice(0, 140) + '...';
+      DOM.aesCt.textContent = 'IV: ' + bytesToHex(iv) + '\nCT: ' + bytesToHex(ct).slice(0, 100) + '...';
+      DOM.pqcDisplay.style.display = 'block';
+      showStatus('Enkripsi hybrid demonstrator berhasil.', 'success');
+    }
+
+    DOM.cipherSec.style.display = 'block';
+    DOM.decSec.style.display = 'none';
+    DOM.decBtn.disabled = false;
+  } catch (e) {
+    showStatus('Gagal: ' + e.message, 'error');
+    console.error(e);
+  }
+});
+
+/* ═══════════════════════════════════════════════════════
+   DEKRIPSI / VERIFIKASI
+   ═══════════════════════════════════════════════════════ */
+DOM.decBtn.addEventListener('click', async () => {
+  if (!STATE.rsaKeyPair) return showStatus('Bangkitkan kunci dulu!', 'error');
+  try {
+    if (STATE.mode === 'rsa'){
+      if (STATE.cipher.type === 'direct'){
+        const pt = await crypto.subtle.decrypt(
+          { name: 'RSA-OAEP' }, STATE.rsaKeyPair.privateKey, STATE.cipher.ct
+        );
+        DOM.decryptedDisp.textContent = new TextDecoder().decode(pt);
+      } else {
+        const rawAes = await crypto.subtle.decrypt(
+          { name: 'RSA-OAEP' }, STATE.rsaKeyPair.privateKey, STATE.cipher.rsaWrapped
+        );
+        const aesKey = await crypto.subtle.importKey(
+          'raw', rawAes, 'AES-GCM', false, ['decrypt']
+        );
+        const pt = await crypto.subtle.decrypt(
+          { name: 'AES-GCM', iv: STATE.cipher.iv }, aesKey, STATE.cipher.aesCt
+        );
+        DOM.decryptedDisp.textContent = new TextDecoder().decode(pt);
+      }
+      showStatus('Dekripsi RSA-OAEP berhasil.', 'success');
+
+    } else if (STATE.mode === 'sign'){
+      const data = new TextEncoder().encode(DOM.plaintext.value);
+      const valid = await crypto.subtle.verify(
+        { name: 'RSA-PSS', saltLength: CONFIG.PSS_SALT },
+        STATE.rsaKeyPair.publicKey,
+        STATE.signature,
+        data
+      );
+      DOM.decryptedDisp.textContent = valid
+        ? '✅ Tanda tangan VALID — pesan asli dan belum dimodifikasi.'
+        : '❌ Tanda tangan TIDAK VALID — pesan mungkin telah diubah.';
+      showStatus(valid ? 'Verifikasi berhasil.' : 'Verifikasi gagal.', valid ? 'success' : 'error');
+
+    } else {
+      const rawAes = await crypto.subtle.decrypt(
+        { name: 'RSA-OAEP' }, STATE.rsaKeyPair.privateKey, STATE.hybridPayload.rsaWrapped
+      );
+      const pqShared = mlkemDecaps(STATE.pqcKeyPair.dk, STATE.hybridPayload.pqCt);
+
+      const { pqCt, rsaWrapped, iv } = STATE.hybridPayload;
+      const combined = new Uint8Array(
+        CONFIG.KDF_CONTEXT.length + 64 + pqCt.length + rsaWrapped.length + iv.length
+      );
+      let off = 0;
+      combined.set(CONFIG.KDF_CONTEXT, off); off += CONFIG.KDF_CONTEXT.length;
+      combined.set(new Uint8Array(rawAes), off); off += 32;
+      combined.set(pqShared, off); off += 32;
+      combined.set(pqCt, off); off += pqCt.length;
+      combined.set(rsaWrapped, off); off += rsaWrapped.length;
+      combined.set(iv, off);
+      const finalKeyBytes = new Uint8Array(
+        await crypto.subtle.digest('SHA-256', combined)
+      );
+
+      const finalKey = await crypto.subtle.importKey(
+        'raw', finalKeyBytes, 'AES-GCM', false, ['decrypt']
+      );
+      const pt = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: STATE.hybridPayload.iv },
+        finalKey, STATE.hybridPayload.aesCt
+      );
+      DOM.decryptedDisp.textContent = new TextDecoder().decode(pt);
+      showStatus('Dekripsi hybrid demonstrator berhasil.', 'success');
+    }
+
+    DOM.decSec.style.display = 'block';
+  } catch (e) {
+    showStatus('Gagal: ' + e.message, 'error');
+    console.error(e);
+  }
+});
+
+/* ═══════════════════════════════════════════════════════
+   RESET
+   ═══════════════════════════════════════════════════════ */
+DOM.resetBtn.addEventListener('click', () => {
+  STATE.rsaKeyPair = null;
+  STATE.pqcKeyPair = null;
+  STATE.cipher = null;
+  STATE.signature = null;
+  STATE.hybridPayload = null;
+  DOM.keySec.style.display = 'none';
+  DOM.cipherSec.style.display = 'none';
+  DOM.decSec.style.display = 'none';
+  DOM.pqcDisplay.style.display = 'none';
+  DOM.encBtn.disabled = true;
+  DOM.decBtn.disabled = true;
+  showStatus('Reset selesai.', 'info');
+});
+
+/* ── Inisialisasi ──────────────────────────────────────── */
+DOM.encBtn.disabled = true;
+DOM.decBtn.disabled = true;
+showStatus('Siap. Pilih mode, bangkitkan kunci, lalu enkripsi/dekripsi.', 'info');
+</script>
+</body>
+</html>
